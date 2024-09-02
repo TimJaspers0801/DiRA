@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import segmentation_models_pytorch as smp
+from metaformer import FPN, caformer_s18, MetaFormerFPN
 
 
 class MoCo(nn.Module):
@@ -179,8 +180,9 @@ class DiRA_MoCo(nn.Module):
 
         # create backbones (U-Net)
         # num_classes is the output fc dimension
-        self.encoder_q = base_encoder(backbone, encoder_weights, activation,num_classes=dim)
-        self.encoder_k = base_encoder(backbone, encoder_weights, activation,num_classes=dim)
+        self.encoder_q = base_encoder(backbone, encoder_weights, activation, num_classes=dim)
+        self.encoder_k = base_encoder(backbone, encoder_weights, activation, num_classes=dim)
+
 
         if mlp:
             dim_mlp = self.encoder_q.fc.weight.shape[1]
@@ -313,8 +315,7 @@ class DiRA_MoCo(nn.Module):
         # dequeue and enqueue
         self._dequeue_and_enqueue(k)
 
-        return logits, labels,rec_output
-
+        return logits, labels, rec_output
 
 # utils
 @torch.no_grad()
@@ -346,7 +347,7 @@ class DiRA_UNet(nn.Module):
         decoder_output = self.backbone.decoder(*features)
         masks = self.backbone.segmentation_head(decoder_output)
 
-        f=self.avgpool(features[-1])
+        f = self.avgpool(features[-1])
         f = torch.flatten(f,1)
         f = self.fc(f)
 
@@ -384,3 +385,5 @@ def weights_init_normal(m):
     elif classname.find("BatchNorm2d") != -1:
         torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
         torch.nn.init.constant_(m.bias.data, 0.0)
+
+

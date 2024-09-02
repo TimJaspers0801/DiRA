@@ -1,4 +1,4 @@
-from utils import AverageMeter,ProgressMeter
+from utils import AverageMeter, ProgressMeter
 import torch
 import time
 from torch.autograd import Variable
@@ -55,6 +55,7 @@ def train_dir(train_loader, model, nce_criterion, mse_criterion, optimizer, epoc
 
         if i % args.print_freq == 0:
             progress.display(i)
+    torch.cuda.synchronize()
 
 
 def validate_dir(val_loader, model, nce_criterion, mse_criterion, epoch, args):
@@ -107,6 +108,7 @@ def validate_dir(val_loader, model, nce_criterion, mse_criterion, epoch, args):
 
         if i % args.print_freq == 0:
             progress.display(i)
+    torch.cuda.synchronize()
 
     return counter
 
@@ -186,6 +188,8 @@ def train_dira(train_loader, generator, nce_criterion, mse_criterion, adversaria
         if i % args.print_freq == 0:
             progress.display(i)
 
+        torch.cuda.synchronize()
+
 def validate_dira(val_loader, model, nce_criterion, mse_criterion,adversarial_criterion, epoch, args,discriminator,D_output_shape):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -237,5 +241,7 @@ def validate_dira(val_loader, model, nce_criterion, mse_criterion,adversarial_cr
 
         if i % args.print_freq == 0:
             progress.display(i)
+
+    torch.cuda.synchronize()
 
     return counter
