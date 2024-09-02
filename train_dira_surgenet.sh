@@ -3,7 +3,7 @@
 #SBATCH --nodes=1                               # Specify the amount of A100 Nodes with 4 A100 GPUs (single GPU 128 SBUs/hour, 512 SBUs/hour for an entire node)
 #SBATCH --ntasks=1                              # Specify the number of tasks
 #SBATCH --cpus-per-task=64                      # Specify the number of CPUs/task
-#SBATCH --gpus=rtx2080ti.11gb:8                 # Specify the number of GPUs to use
+#SBATCH --gpus=titanrtx.24gb:2                 # Specify the number of GPUs to use
 #SBATCH --time=120:00:00                        # Specify the maximum time the job can run
 #SBATCH --mail-type=BEGIN,END                   # Specify when to receive notifications on email
 #SBATCH --mail-user=t.j.m.jaspers@tue.nl        # Specify email address to receive notifications
