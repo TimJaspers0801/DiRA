@@ -19,7 +19,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from data_loader import ChestX_ray14
 import transformation
 from DiRA_models import DiRA_UNet, DiRA_MoCo, MoCo, Discriminator, weights_init_normal
 from trainer import train_dir, validate_dir, train_dira, validate_dira
@@ -63,6 +62,9 @@ def train_dira(args):
         drop_last=True,
         collate_fn=data_loader.custom_collate_fn
     )
+
+    print("Train dataset size: ", len(dataset_train))
+    print("Validation dataset size: ", len(dataset_valid))
 
     #  first check if base encoder is in metaformer file
     if args.arch in metaformer.__dict__.keys():
