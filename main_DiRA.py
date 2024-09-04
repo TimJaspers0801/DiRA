@@ -38,6 +38,7 @@ def train_dira(args):
     args.batch_size = int(args.batch_size / args.world_size)
 
     # ============ preparing data ... ============
+    print('===> Preparing data ...')
     dataset = data_loader.concat_zip_datasets(train_dir, transforms=transformation.Transform(args.mode))
     # split dataset in train en validation
     dataset_train = torch.utils.data.Subset(dataset, range(0, int(len(dataset)*0.95)))
