@@ -24,6 +24,7 @@ from DiRA_models import DiRA_UNet, DiRA_MoCo, MoCo, Discriminator, weights_init_
 from trainer import train_dir, validate_dir, train_dira, validate_dira
 from torch.autograd import Variable
 import utils_dino as utils
+import data_loader
 
 
 model_names = sorted(name for name in models.__dict__

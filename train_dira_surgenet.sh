@@ -22,7 +22,7 @@ cd /vast.mnt/home/20172619/SSL/DiRA || return
 
 
 ### RUN DiRA training on SurgeNet ###
-srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt --nv /elec003.mnt/project/elec-vca-uppergi/Docker/Tim/endoiqa_v7.sif  torchrun --nnodes 1 --nproc_per_node 2 main_DiRA.py \
+srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt --nv /elec003.mnt/project/elec-vca-uppergi/Docker/Tim/dira.sif  torchrun --nnodes 1 --nproc_per_node 2 main_DiRA.py \
     '/elec003.mnt/project/elec-vca-uppergi/Datasets/ssl-datasets/SurgeNetXL' \
     -a caformer_s18 \
     --lr=0.03 \
