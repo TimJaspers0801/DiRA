@@ -6,6 +6,8 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
+model_names.append('caformer_s18')
+
 def get_arguments():
     parser = argparse.ArgumentParser(description='SurgeNet Training')
     parser.add_argument('data', metavar='DIR',

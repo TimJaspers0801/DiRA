@@ -32,6 +32,8 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
+model_names.append('caformer_s18')
+
 def train_dira(args):
     utils.init_distributed_mode(args)
     utils.fix_random_seeds(7)
