@@ -5,7 +5,6 @@
 #SBATCH --cpus-per-task=24                      # Specify the number of CPUs/task
 #SBATCH --gpus=titanrtx.24gb:2                 # Specify the number of GPUs to use
 #SBATCH --time=120:00:00                        # Specify the maximum time the job can run
-#SBATCH --mail-user=t.j.m.jaspers@tue.nl        # Specify email address to receive notifications
 
 export OUTPUT_FOLDER=DiRA_SurgeNet                                                    # Define name of output folder
 cd /home/elec001/20172619/SSL/dino/ || return                                              # Navigate to the location of the code (ckusters account)
