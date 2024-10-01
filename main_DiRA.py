@@ -186,7 +186,7 @@ if __name__ == '__main__':
     opt = parser.parse_args()
 
     # Modify the output directory to include the experiment name
-    opt.output_dir = os.path.join(opt.output_dir, opt.experiment)
+    opt.output_dir = os.path.join(opt.output_dir, opt.experimentname)
 
     if not os.path.exists(opt.output_dir):
         os.makedirs(opt.output_dir)
