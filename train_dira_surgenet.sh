@@ -5,7 +5,6 @@
 #SBATCH --cpus-per-task=24                      # Specify the number of CPUs/task
 #SBATCH --gpus=titanrtx.24gb:2                 # Specify the number of GPUs to use
 #SBATCH --time=120:00:00                        # Specify the maximum time the job can run
-#SBATCH --mail-type=BEGIN,END                   # Specify when to receive notifications on email
 #SBATCH --mail-user=t.j.m.jaspers@tue.nl        # Specify email address to receive notifications
 
 export OUTPUT_FOLDER=DiRA_SurgeNet                                                    # Define name of output folder
@@ -22,7 +21,7 @@ cd /vast.mnt/home/20172619/SSL/DiRA || return
 
 
 ### RUN DiRA training on SurgeNet ###
-srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt --nv /elec003.mnt/project/elec-vca-uppergi/Docker/Tim/dira.sif  torchrun --nnodes 1 --nproc_per_node 2 main_DiRA.py \
+srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt --nv /elec003.mnt/project/elec-vca-uppergi/Docker/Tim/dira_v3.sif  torchrun --nnodes 1 --nproc_per_node 2 main_DiRA.py \
     '/elec003.mnt/project/elec-vca-uppergi/Datasets/ssl-datasets/SurgeNetXL' \
     -a caformer_s18 \
     --lr=0.03 \
