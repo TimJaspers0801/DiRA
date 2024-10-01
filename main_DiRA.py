@@ -25,6 +25,7 @@ from trainer import train_dir, validate_dir, train_dira, validate_dira
 from torch.autograd import Variable
 import utils_dino as utils
 import data_loader
+from get_arguments import get_arguments
 
 
 model_names = sorted(name for name in models.__dict__
@@ -179,7 +180,7 @@ def adjust_learning_rate(optimizer, epoch, args):
         param_group['lr'] = lr
 
 if __name__ == '__main__':
-    parser = get_args_parser()
+    parser = get_arguments()
     opt = parser.parse_args()
 
     # Modify the output directory to include the experiment name
