@@ -35,6 +35,7 @@ model_names = sorted(name for name in models.__dict__
 model_names.append('caformer_s18')
 
 def train_dira(args):
+    print("=> using pre-trained model '{}'".format(args.arch))
     utils.init_distributed_mode(args)
     utils.fix_random_seeds(7)
     cudnn.benchmark = True
