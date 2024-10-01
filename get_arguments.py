@@ -101,4 +101,11 @@ def get_arguments():
         help="name of the experiment (default: default_experiment)",
     )
 
+    parser.add_argument("--output_dir",
+        default="output",
+        type=str,
+        metavar="DIR",
+        help="directory to save the output",
+    )
+
     return parser

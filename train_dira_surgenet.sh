@@ -31,3 +31,4 @@ srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt 
     --rank=0 \
     --experimentname='SurgeNet-DiRA' \
     --epochs=50 \
+    --output-folder='/vast.mnt/home/20172619/SSL/DiRA/output/' \
