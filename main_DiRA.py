@@ -191,4 +191,4 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    train_dira()
+    train_dira(opt)
