@@ -44,7 +44,7 @@ def train_dira(args):
     # ============ preparing data ... ============
     if utils.is_main_process():
         print('===> Preparing data ...')
-    dataset = data_loader.concat_zip_datasets(train_dir, transforms=transformation.Transform(args.mode))
+    dataset = data_loader.concat_zip_datasets(train_dir, transform=transformation.Transform(args.mode))
     # split dataset in train en validation
     dataset_train = torch.utils.data.Subset(dataset, range(0, int(len(dataset)*0.95)))
     dataset_valid = torch.utils.data.Subset(dataset, range(int(len(dataset)*0.95), len(dataset)))
