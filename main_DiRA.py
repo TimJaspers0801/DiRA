@@ -42,7 +42,8 @@ def train_dira(args):
     args.batch_size = int(args.batch_size / args.world_size)
 
     # ============ preparing data ... ============
-    print('===> Preparing data ...')
+    if utils.is_main_process():
+        print('===> Preparing data ...')
     dataset = data_loader.concat_zip_datasets(train_dir, transforms=transformation.Transform(args.mode))
     # split dataset in train en validation
     dataset_train = torch.utils.data.Subset(dataset, range(0, int(len(dataset)*0.95)))
@@ -68,9 +69,9 @@ def train_dira(args):
         drop_last=True,
         collate_fn=data_loader.custom_collate_fn
     )
-
-    print("Train dataset size: ", len(dataset_train))
-    print("Validation dataset size: ", len(dataset_valid))
+    if utils.is_main_process():
+        print("Train dataset size: ", len(dataset_train))
+        print("Validation dataset size: ", len(dataset_valid))
 
     #  first check if base encoder is in metaformer file
     if args.arch in metaformer.__dict__.keys():

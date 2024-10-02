@@ -7,7 +7,6 @@
 #SBATCH --time=120:00:00                        # Specify the maximum time the job can run
 
 export OUTPUT_FOLDER=DiRA_SurgeNet                                                    # Define name of output folder
-cd /home/elec001/20172619/SSL/dino/ || return                                              # Navigate to the location of the code (ckusters account)
 export WANDB_API_KEY=1cf878a1b1aafcd37a1f6e6ba8fdd18ba1c4affb
 export WANDB_DIR=/home/elec001/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
 export WANDB_CONFIG_DIR=/home/elec001/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
@@ -25,7 +24,7 @@ srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt 
     -a caformer_s18 \
     --lr=0.03 \
     --batch-size=2048 \
-    --dist-url='tcp://localhost:10001' \
+    --dist-url='env://' \
     --multiprocessing-distributed \
     --world-size=1 \
     --rank=0 \
