@@ -27,6 +27,8 @@ import utils_dino as utils
 import data_loader
 from get_arguments import get_arguments
 
+import metaformer
+
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
