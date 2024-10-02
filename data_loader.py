@@ -96,13 +96,13 @@ class ZipDataset(torch.utils.data.Dataset):
     @staticmethod
     def _valid_member(
             m: zipfile.ZipInfo,
-            image_suffix: str,
+            image_suffixes: list,
     ):
-        """Returns True if the member is valid"""
-        return (m.filename.endswith(image_suffix)
+        """Returns True if the member is valid based on the list of suffixes"""
+        return (
+                any(m.filename.endswith(suffix) for suffix in image_suffixes)
                 and not m.is_dir()
-                )
-
+        )
     def __len__(self):
         """Returns the length of the dataset"""
         return len(self.images)
@@ -112,30 +112,30 @@ class ZipDataset(torch.utils.data.Dataset):
 
         # Open the zip file
         with zipfile.ZipFile(self.zip_path) as image_zip:
+
             # Open the image data from the zip file based on index
             with image_zip.open(
                     self.image_folder_members[self.images[index]].filename
             ) as image_file:
                 image = Image.open(image_file).convert("RGB")
 
+        # Create dummy label to return DINO dataloader
+        label = torch.tensor(0)
+
         # Apply torchvision transforms if defined
         if self.transform:
             image = self.transform(image)
 
-        return image
+        return image, label
 
 
 """FUNCTION FOR CONCATENATING .ZIP DATASETS"""
 
-def custom_collate_fn(batch):
-    # Transpose the list of samples to have the batch dimension within the list
-    batch = list(map(list, zip(*batch)))
-    return [torch.stack(item) for item in batch]
-
 def concat_zip_datasets(
         parent_folder: str,
-        transforms: Callable,
-        image_suffix: str = '.png',
+        transform: Callable,
+        image_suffix: list = ['.png', 'jpg'],
+        datasets: list = None,
 ):
     """
         Concatenates multiple ZipDatasets into a single ConcatDataset.
@@ -157,13 +157,22 @@ def concat_zip_datasets(
     # Create list of zip folders
     zip_folders = list(Path(parent_folder).iterdir())
 
+    if datasets is not None:
+        included_folders = []
+        for dataset in datasets:
+            for zip_folder in zip_folders:
+                if dataset in zip_folder.name:
+                    included_folders.append(zip_folder)
+    else:
+        included_folders = zip_folders
+
     # Construct datasets for each zip folder
     dataset = [
         ZipDataset(
-            transforms=transforms,
+            transform=transform,
             zip_path=zip_folder,
             image_suffix=image_suffix)
-        for zip_folder in zip_folders
+        for zip_folder in included_folders
     ]
 
     # Concatenate the datasets
@@ -171,3 +180,10 @@ def concat_zip_datasets(
 
     return dataset
 
+
+"""FUNCTION FOR CONCATENATING .ZIP DATASETS"""
+
+def custom_collate_fn(batch):
+    # Transpose the list of samples to have the batch dimension within the list
+    batch = list(map(list, zip(*batch)))
+    return [torch.stack(item) for item in batch]
