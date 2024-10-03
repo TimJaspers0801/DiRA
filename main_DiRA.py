@@ -84,7 +84,7 @@ def main(args):
     if args.mode.lower() == "di": #discriminator only
         model = MoCo(base_encoder, args.moco_dim, args.moco_k, args.moco_m, args.moco_t, args.mlp)
     else:
-        model = DiRA_UNetAdapted(DiRA_UNet, args.moco_dim, args.moco_k, args.moco_m, args.moco_t, args.mlp, backbone=args.arch)
+        model = DiRA_MoCo(DiRA_UNetAdapted, args.moco_dim, args.moco_k, args.moco_m, args.moco_t, args.mlp, backbone=args.arch)
     print(model)
     discriminator = Discriminator(args.out_channels)
     discriminator.apply(weights_init_normal)
