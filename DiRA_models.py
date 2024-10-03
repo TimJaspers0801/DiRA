@@ -359,10 +359,10 @@ class DiRA_UNetAdapted(nn.Module):
     def __init__(self, backbone, encoder_weights=None, activation=None,num_classes=1000):
         super(DiRA_UNetAdapted, self).__init__()
 
-        if backbone == 'caformer_s18':
-            self.backbone = UNetWithMetaFormer()
-        else:
-            self.backbone = smp.Unet(backbone, encoder_weights=encoder_weights, activation=activation)
+
+        self.backbone = UNetWithMetaFormer()
+
+        #self.backbone = smp.Unet(backbone, encoder_weights=encoder_weights, activation=activation)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
