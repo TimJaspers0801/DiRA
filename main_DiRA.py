@@ -20,7 +20,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import transformation
-from DiRA_models import DiRA_UNet, DiRA_MoCo, MoCo, Discriminator, weights_init_normal
+from DiRA_models import DiRA_UNet, DiRA_MoCo, DiRA_UNetAdapted, MoCo, Discriminator, weights_init_normal
 from trainer import train_dir, validate_dir, train_dira, validate_dira
 from torch.autograd import Variable
 import utils_dino as utils
@@ -84,7 +84,7 @@ def main(args):
     if args.mode.lower() == "di": #discriminator only
         model = MoCo(base_encoder, args.moco_dim, args.moco_k, args.moco_m, args.moco_t, args.mlp)
     else:
-        model = DiRA_MoCo(DiRA_UNet, args.moco_dim, args.moco_k, args.moco_m, args.moco_t, args.mlp, backbone=args.arch)
+        model = DiRA_UNetAdapted(DiRA_UNet, args.moco_dim, args.moco_k, args.moco_m, args.moco_t, args.mlp, backbone=args.arch)
     print(model)
     discriminator = Discriminator(args.out_channels)
     discriminator.apply(weights_init_normal)
