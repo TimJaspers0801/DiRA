@@ -99,11 +99,11 @@ def main(args):
         msg = model.load_state_dict(ckpt)
         print("=> loaded pre-trained model '{}'".format(args.generator_pre_trained_weights))
         print("missing keys:", msg.missing_keys)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[args.gpu])
 
     model.cuda()
     discriminator.cuda()
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-    discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[args.gpu])
 
     nce_criterion = nn.CrossEntropyLoss().cuda()
     mse_criterion = nn.MSELoss().cuda()
