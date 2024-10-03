@@ -4,6 +4,7 @@ import segmentation_models_pytorch as smp
 from metaformer import FPN, caformer_s18, MetaFormerFPN
 
 
+
 class MoCo(nn.Module):
     """
     Build a MoCo model with: a query encoder, a key encoder, and a queue
@@ -180,8 +181,8 @@ class DiRA_MoCo(nn.Module):
 
         # create backbones (U-Net)
         # num_classes is the output fc dimension
-        self.encoder_q = base_encoder(backbone, encoder_weights, activation, num_classes=dim)
-        self.encoder_k = base_encoder(backbone, encoder_weights, activation, num_classes=dim)
+        self.encoder_q = base_encoder #base_encoder(backbone, encoder_weights, activation, num_classes=dim)
+        self.encoder_k = base_encoder #base_encoder(backbone, encoder_weights, activation, num_classes=dim)
 
 
         if mlp:
