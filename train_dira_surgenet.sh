@@ -14,9 +14,13 @@ export WANDB_CACHE_DIR=/vast.mnt/home/20172619/SSL/DiRA/$OUTPUT_FOLDER/wandb
 export WANDB_START_METHOD="thread"
 wandb login
 
+# create output directory
+mkdir -p /vast.mnt/home/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER
+# create wandb directory
+mkdir -p /vast.mnt/home/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
+
 ### SETUP DIRECTORY TO WORK IN ###
 cd /vast.mnt/home/20172619/SSL/DiRA || return
-
 
 ### RUN DiRA training on SurgeNet ###
 srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt --nv /elec003.mnt/project/elec-vca-uppergi/Docker/Tim/dira_v5.sif  torchrun --nnodes 1 --nproc_per_node 2 main_DiRA.py \
