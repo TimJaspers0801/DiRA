@@ -59,9 +59,8 @@ def main(args):
         batch_size=args.batch_size,
         num_workers=args.workers,
         pin_memory=False,
-        drop_last=True,
-        collate_fn=data_loader.custom_collate_fn
-    )
+        drop_last=True)
+
     sampler_valid = torch.utils.data.DistributedSampler(dataset_valid, shuffle=False)
     valid_loader = torch.utils.data.DataLoader(
         dataset_valid,
@@ -69,9 +68,8 @@ def main(args):
         batch_size=args.batch_size,
         num_workers=args.workers,
         pin_memory=False,
-        drop_last=True,
-        collate_fn=data_loader.custom_collate_fn
-    )
+        drop_last=True)
+
     if utils.is_main_process():
         print("Train dataset size: ", len(dataset_train))
         print("Validation dataset size: ", len(dataset_valid))
