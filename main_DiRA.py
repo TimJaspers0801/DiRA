@@ -100,10 +100,10 @@ def main(args):
         print("=> loaded pre-trained model '{}'".format(args.generator_pre_trained_weights))
         print("missing keys:", msg.missing_keys)
 
-        model.cuda()
-        discriminator.cuda()
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-        discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[args.gpu])
+    model.cuda()
+    discriminator.cuda()
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+    discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[args.gpu])
 
     nce_criterion = nn.CrossEntropyLoss().cuda()
     mse_criterion = nn.MSELoss().cuda()
@@ -124,6 +124,7 @@ def main(args):
     ## wandb logging
     if utils.is_main_process():
         wandb.init(project='DiRA', name=args.name)
+
 
     for epoch in range(args.start_epoch, args.epochs):
         adjust_learning_rate(optimizer, epoch, args)
