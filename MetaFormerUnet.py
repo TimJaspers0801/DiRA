@@ -6,15 +6,11 @@ from typing import Optional, List
 from timm.layers import ClassifierHead
 import metaformer
 
+
 class UNetWithMetaFormer(nn.Module):
-    """
-    U-Net with MetaFormer as the backbone (encoder).
-    This implementation uses the MetaFormer architecture for feature extraction and
-    integrates it with a U-Net-style decoder.
-    """
     def __init__(
             self,
-            backbone='metaformer',
+            backbone='MetaFormer',
             encoder_freeze=False,
             pretrained=True,
             weights=None,
@@ -25,7 +21,7 @@ class UNetWithMetaFormer(nn.Module):
             decoder_use_batchnorm=True,
             decoder_channels=(256, 128, 64, 32, 16),
             in_channels=3,
-            num_classes=2,
+            num_classes=2,  # Output classes for segmentation
             center=False,
             norm_layer=nn.BatchNorm2d,
             activation=nn.ReLU
@@ -33,86 +29,95 @@ class UNetWithMetaFormer(nn.Module):
         super().__init__()
         backbone_kwargs = backbone_kwargs or {}
 
-        # Initialize MetaFormer as the encoder
-        # encoder = MetaFormer(
-        #     in_chans=in_channels,
-        #     num_classes=num_classes,  # this is not used in feature extraction
-        #     pretrained_weights=weights,
-        #     **backbone_kwargs
-        # )
+        # MetaFormer backbone initialization
+        encoder = MetaFormer(
+            in_chans=in_channels,
+            num_classes=num_classes,  # You can ignore this for segmentation
+            pretrained_weights=weights,
+            **backbone_kwargs
+        )
 
-        encoder = metaformer.__dict__[args.arch](num_classes=num_classes)
+        # Extract channels information from MetaFormer feature maps
+        encoder_channels = [64, 128, 320, 512]  # These should match MetaFormer's output dims
 
-        # MetaFormer returns feature maps at multiple stages
-        encoder_channels = encoder.dims[::-1]  # Reverse order for decoder input
         self.encoder = encoder
         self.backbone = backbone
         if encoder_freeze:
             self._freeze_encoder(non_trainable_layers)
 
         if preprocessing:
-            self.mean = [0.485, 0.456, 0.406]  # Mean for ImageNet
-            self.std = [0.229, 0.224, 0.225]   # Standard deviation for ImageNet
+            self.mean = [0.485, 0.456, 0.406]  # You can set this according to your dataset
+            self.std = [0.229, 0.224, 0.225]
         else:
             self.mean = None
             self.std = None
 
+        # Define the decoder using a Unet-like structure
         if not decoder_use_batchnorm:
             norm_layer = None
-
-        # U-Net decoder
         self.decoder = UnetDecoder(
             encoder_channels=encoder_channels,
             decoder_channels=decoder_channels,
-            final_channels=num_classes,
+            final_channels=num_classes,  # Set the final channels to number of segmentation classes
             norm_layer=norm_layer,
             center=center,
             activation=activation
         )
 
-        # Classification head, if needed
-        self.classification_head = ClassifierHead(encoder_channels[0], 1)
+        # Segmentation head that maps final decoder output to segmentation classes
+        self.segmentation_head = SegmentationHead(
+            in_channels=decoder_channels[-1],  # The smallest feature map size from decoder
+            out_channels=num_classes,  # Number of segmentation classes
+            activation=None  # Apply softmax/sigmoid as needed in the main training loop
+        )
+
+        if weights:
+            self.encoder.load_state_dict(torch.load(weights), strict=True)
 
     def forward(self, x: torch.Tensor):
         if self.mean and self.std:
             x = self._preprocess_input(x)
 
-        # Pass input through MetaFormer encoder
-        x, feature_maps = self.encoder.forward_features(x)
+        # Get encoder features from MetaFormer (used for skip connections)
+        _, features = self.encoder.forward_features(x)  # Get features from different stages
 
-        # Reverse the order of feature maps for U-Net decoder
-        feature_maps = list(reversed(feature_maps))
+        # Reverse the feature maps for the decoder
+        features = list(reversed(features))
 
-        # Apply classification head to the first feature map
-        cls = self.classification_head(feature_maps[0])
+        # Decoder forward pass using the features
+        x = self.decoder(features)
 
-        # Pass through U-Net decoder
-        x = self.decoder(feature_maps)
-        return x, cls
+        # Apply segmentation head
+        seg_output = self.segmentation_head(x)
+
+        return seg_output
 
     @torch.no_grad()
     def predict(self, x):
-        """
-        Inference method. Switch model to `eval` mode,
-        call `.forward(x)` with `torch.no_grad()`
-        """
-        if self.training:
-            self.eval()
-        x, cls = self.forward(x)
-        return x, cls
+        if self.training: self.eval()
+        seg_output = self.forward(x)
+        return seg_output
 
     def _freeze_encoder(self, non_trainable_layer_idxs):
         """
-        Set selected layers non trainable, excluding BatchNormalization layers.
+        Set selected layers non-trainable, excluding BatchNormalization layers.
+        Parameters
+        ----------
+        non_trainable_layer_idxs: tuple
+            Specifies which layers are non-trainable for
+            list of the non-trainable layer names.
         """
-        for layer_idx in non_trainable_layer_idxs:
-            for param in self.encoder.stages[layer_idx].parameters():
-                param.requires_grad = False
+        non_trainable_layers = [
+            self.encoder.feature_info[layer_idx]["module"].replace(".", "_") \
+            for layer_idx in non_trainable_layer_idxs
+        ]
+        for layer in non_trainable_layers:
+            for child in self.encoder[layer].children():
+                for param in child.parameters():
+                    param.requires_grad = False
+        return
 
     def _preprocess_input(self, x, input_range=[0, 1], inplace=False):
-        """
-        Preprocess input according to the mean and std for the encoder.
-        """
         if not x.is_floating_point():
             raise TypeError(f"Input tensor should be a float tensor. Got {x.dtype}.")
 
@@ -233,4 +238,21 @@ class UnetDecoder(nn.Module):
             skip = skips[i] if i < len(skips) else None
             x = b(x, skip)
         x = self.final_conv(x)
+        return x
+
+class SegmentationHead(nn.Module):
+    """
+    Segmentation head which applies the final conv layer to the decoder output
+    to get the required number of segmentation classes.
+    """
+
+    def __init__(self, in_channels, out_channels, activation=None):
+        super(SegmentationHead, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+        self.activation = activation
+
+    def forward(self, x):
+        x = self.conv(x)
+        if self.activation is not None:
+            x = self.activation(x)
         return x
