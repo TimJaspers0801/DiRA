@@ -121,6 +121,7 @@ def train_dira(args):
 
 
     best_loss = 10000000000
+    D_output_shape = (1, 28, 28)
 
     ## wandb logging
     if utils.is_main_process():

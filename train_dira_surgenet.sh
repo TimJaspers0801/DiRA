@@ -8,9 +8,9 @@
 
 export OUTPUT_FOLDER=DiRA_SurgeNet                                                    # Define name of output folder
 export WANDB_API_KEY=1cf878a1b1aafcd37a1f6e6ba8fdd18ba1c4affb
-export WANDB_DIR=/home/elec001/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
-export WANDB_CONFIG_DIR=/home/elec001/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
-export WANDB_CACHE_DIR=/home/elec001/20172619/SSL/DiRA/$OUTPUT_FOLDER/wandb
+export WANDB_DIR=/vast.mnt/home/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
+export WANDB_CONFIG_DIR=/vast.mnt/home/20172619/SSL/DiRA/experiments/$OUTPUT_FOLDER/wandb
+export WANDB_CACHE_DIR=/vast.mnt/home/20172619/SSL/DiRA/$OUTPUT_FOLDER/wandb
 export WANDB_START_METHOD="thread"
 wandb login
 
