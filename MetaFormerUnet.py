@@ -30,12 +30,14 @@ class UNetWithMetaFormer(nn.Module):
         backbone_kwargs = backbone_kwargs or {}
 
         # MetaFormer backbone initialization
-        encoder = MetaFormer(
-            in_chans=in_channels,
-            num_classes=num_classes,  # You can ignore this for segmentation
-            pretrained_weights=weights,
-            **backbone_kwargs
-        )
+        # encoder = MetaFormer(
+        #     in_chans=in_channels,
+        #     num_classes=num_classes,  # You can ignore this for segmentation
+        #     pretrained_weights=weights,
+        #     **backbone_kwargs
+        # )
+
+        encoder = metaformer.__dict__[args.arch](num_classes=args.moco_dim)
 
         # Extract channels information from MetaFormer feature maps
         encoder_channels = [64, 128, 320, 512]  # These should match MetaFormer's output dims
