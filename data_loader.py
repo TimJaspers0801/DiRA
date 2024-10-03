@@ -119,15 +119,11 @@ class ZipDataset(torch.utils.data.Dataset):
             ) as image_file:
                 image = Image.open(image_file).convert("RGB")
 
-        # Create dummy label to return DINO dataloader
-        label = torch.tensor(0)
-
         # Apply torchvision transforms if defined
         if self.transform:
             image = self.transform(image)
 
-        return image, label
-
+        return image
 
 """FUNCTION FOR CONCATENATING .ZIP DATASETS"""
 
