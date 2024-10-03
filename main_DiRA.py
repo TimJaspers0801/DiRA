@@ -37,7 +37,7 @@ model_names = sorted(name for name in models.__dict__
 
 model_names.append('caformer_s18')
 
-def train_dira(args):
+def main(args):
     print("=> using pre-trained model '{}'".format(args.arch))
     utils.init_distributed_mode(args)
     utils.fix_random_seeds(7)
@@ -197,4 +197,4 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    train_dira(opt)
+    main(opt)
