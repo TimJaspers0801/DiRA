@@ -37,7 +37,7 @@ class UNetWithMetaFormer(nn.Module):
         #     **backbone_kwargs
         # )
 
-        encoder = metaformer.__dict__[args.arch](num_classes=num_classes)
+        encoder = metaformer.__dict__['caformer_s18'](num_classes=num_classes)
 
         # Extract channels information from MetaFormer feature maps
         encoder_channels = [64, 128, 320, 512]  # These should match MetaFormer's output dims
