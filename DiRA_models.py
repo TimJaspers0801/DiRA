@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import segmentation_models_pytorch as smp
 from metaformer import FPN, caformer_s18, MetaFormerFPN
+from MetaFormerUnet import UNetWithMetaFormer
 
 
 
@@ -181,8 +182,8 @@ class DiRA_MoCo(nn.Module):
 
         # create backbones (U-Net)
         # num_classes is the output fc dimension
-        self.encoder_q = base_encoder #base_encoder(backbone, encoder_weights, activation, num_classes=dim)
-        self.encoder_k = base_encoder #base_encoder(backbone, encoder_weights, activation, num_classes=dim)
+        self.encoder_q = base_encoder(backbone, encoder_weights, activation, num_classes=dim)
+        self.encoder_k = base_encoder(backbone, encoder_weights, activation, num_classes=dim)
 
 
         if mlp:
@@ -338,6 +339,31 @@ class DiRA_UNet(nn.Module):
         super(DiRA_UNet, self).__init__()
 
         self.backbone = smp.Unet(backbone, encoder_weights=encoder_weights, activation=activation)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+        latent = 2048
+        self.fc = nn.Linear(latent, num_classes)
+
+    def forward(self, x):
+        features = self.backbone.encoder(x)
+        decoder_output = self.backbone.decoder(*features)
+        masks = self.backbone.segmentation_head(decoder_output)
+
+        f = self.avgpool(features[-1])
+        f = torch.flatten(f,1)
+        f = self.fc(f)
+
+        return f, masks
+
+class DiRA_UNetAdapted(nn.Module):
+    def __init__(self, backbone, encoder_weights=None, activation=None,num_classes=1000):
+        super(DiRA_UNetAdapted, self).__init__()
+
+        if backbone == 'caformer_s18':
+            self.backbone = UNetWithMetaFormer()
+        else:
+            self.backbone = smp.Unet(backbone, encoder_weights=encoder_weights, activation=activation)
+
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         latent = 2048
