@@ -26,6 +26,7 @@ from torch.autograd import Variable
 import utils_dino as utils
 import data_loader
 from get_arguments import get_arguments
+import wandb
 
 import metaformer
 
