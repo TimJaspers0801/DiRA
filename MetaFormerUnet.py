@@ -19,7 +19,7 @@ class UNetWithMetaFormer(nn.Module):
             backbone_kwargs=None,
             backbone_indices=None,
             decoder_use_batchnorm=True,
-            decoder_channels=(256, 128, 64, 32, 16),
+            decoder_channels=(512, 320, 128, 64),
             in_channels=3,
             num_classes=2,  # Output classes for segmentation
             center=False,
