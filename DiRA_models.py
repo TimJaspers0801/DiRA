@@ -371,6 +371,7 @@ class DiRA_UNetAdapted(nn.Module):
 
     def forward(self, x):
         _, features = self.backbone.encoder.forward_features(x)
+        print("Features from encoder", len(features))
         decoder_output = self.backbone.decoder(*features)
         masks = self.backbone.segmentation_head(decoder_output)
 

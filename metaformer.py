@@ -657,7 +657,7 @@ class MetaFormer(nn.Module):
             feature_list.append(x.permute(0, 3, 1, 2))
         return (
             self.norm(x.mean([1, 2])),
-            feature_list,
+            feature_list
         )  # (B, H, W, C) -> (B, C)
 
     def forward(self, x):
