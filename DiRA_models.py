@@ -360,7 +360,10 @@ class DiRA_UNetAdapted(nn.Module):
         super(DiRA_UNetAdapted, self).__init__()
 
 
-        self.backbone = UNetWithMetaFormer()
+        self.backbone = UNetWithMetaFormer(in_channels=3,
+                                           num_classes=3,  # Change this according to your task
+                                           decoder_channels=(512, 256, 128, 64),  # Adjust if needed
+                                           preprocessing=True)
 
         #self.backbone = smp.Unet(backbone, encoder_weights=encoder_weights, activation=activation)
 
