@@ -27,7 +27,7 @@ srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt 
     '/elec003.mnt/project/elec-vca-uppergi/Datasets/ssl-datasets/SurgeNetXL' \
     -a caformer_s18 \
     --lr=0.03 \
-    --batch-size=124 \
+    --batch-size=48 \
     --dist-url='env://' \
     --multiprocessing-distributed \
     --world-size=1 \

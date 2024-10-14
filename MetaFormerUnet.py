@@ -234,13 +234,13 @@ class UnetDecoder(nn.Module):
     def forward(self, x: List[torch.Tensor]):
         encoder_head = x[0]
         skips = x[1:]
-        print(f"Encoder head shape: {encoder_head.shape}")
+        #print(f"Encoder head shape: {encoder_head.shape}")
         x = self.center(encoder_head)
         for i, b in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
-            if skip is not None:
-                print(f"Decoder block {i} shape before upsample: {x.shape}")
-                print(f"Skip connection {i} shape: {skip.shape}")
+            # if skip is not None:
+            #     print(f"Decoder block {i} shape before upsample: {x.shape}")
+            #     print(f"Skip connection {i} shape: {skip.shape}")
             x = b(x, skip)
         x = self.final_conv(x)
         return x
