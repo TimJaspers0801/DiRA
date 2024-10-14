@@ -162,28 +162,28 @@ class Conv2dBnAct(nn.Module):
 
 
 class DecoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, scale_factor=2, norm_layer=nn.BatchNorm2d, activation=nn.ReLU):
+    def __init__(self, in_channels, out_channels, scale_factor=None, norm_layer=nn.BatchNorm2d, activation=nn.ReLU):
         super().__init__()
-        self.scale_factor = scale_factor
-        self.upsample = nn.Upsample(scale_factor=scale_factor, mode='bilinear', align_corners=True)
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
-        self.bn1 = norm_layer(out_channels) if norm_layer is not None else nn.Identity()
-        self.act = activation(inplace=True)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.norm = norm_layer(out_channels)
+        self.activation = activation(inplace=True)
 
-    def forward(self, x, skip):
-        x = self.upsample(x)
+        # Handle both upsampling and downsampling scenarios
+        if scale_factor is None:
+            self.upsample = nn.Identity()  # No change in spatial dimensions
+        else:
+            self.upsample = nn.Upsample(scale_factor=scale_factor, mode='bilinear', align_corners=True)
+
+    def forward(self, x, skip=None):
+        x = self.upsample(x)  # Upsample or downsample feature map
         if skip is not None:
-            # Ensure the spatial dimensions match before concatenating
-            if x.shape[2:] != skip.shape[2:]:
-                diffY = skip.size()[2] - x.size()[2]
-                diffX = skip.size()[3] - x.size()[3]
-                x = F.pad(x, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
-            x = torch.cat([x, skip], dim=1)
+            x = torch.cat([x, skip], dim=1)  # Concatenate with the skip connection
         x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.act(x)
+        x = self.norm(x)
+        x = self.activation(x)
+        x = self.conv2(x)
         return x
-
 
 class UnetDecoder(nn.Module):
     def __init__(
@@ -216,9 +216,17 @@ class UnetDecoder(nn.Module):
         if len(in_channels) != len(out_channels):
             in_channels.append(in_channels[-1]//2)
 
-        self.blocks = nn.ModuleList()
-        for in_chs, out_chs in zip(in_channels, out_channels):
-            self.blocks.append(DecoderBlock(in_chs, out_chs, norm_layer=norm_layer))
+        # self.blocks = nn.ModuleList()
+        # for in_chs, out_chs in zip(in_channels, out_channels):
+        #     self.blocks.append(DecoderBlock(in_chs, out_chs, norm_layer=norm_layer))
+
+        self.blocks = nn.ModuleList([
+            DecoderBlock(in_channels[0], out_channels[0], scale_factor=0.5),  # Downsample
+            DecoderBlock(in_channels[1], out_channels[1], scale_factor=2.0),  # Upsample
+            DecoderBlock(in_channels[2], out_channels[2], scale_factor=2.0),  # Upsample
+            DecoderBlock(in_channels[3], out_channels[3], scale_factor=2.0),  # Upsample
+        ])
+
         self.final_conv = nn.Conv2d(out_channels[-1], final_channels, kernel_size=(1, 1))
 
         self._init_weight()
