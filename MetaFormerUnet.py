@@ -162,27 +162,26 @@ class Conv2dBnAct(nn.Module):
 
 
 class DecoderBlock(nn.Module):
-    def __init__(
-        self, in_channels, out_channels, scale_factor=2.0,
-        activation=nn.ReLU, norm_layer=nn.BatchNorm2d
-    ):
+    def __init__(self, in_channels, out_channels, scale_factor=2, norm_layer=nn.BatchNorm2d, activation=nn.ReLU):
         super().__init__()
-        conv_args = dict(kernel_size=3, padding=1, activation=activation)
         self.scale_factor = scale_factor
-        if norm_layer is None:
-            self.conv1 = Conv2dBnAct(in_channels, out_channels, **conv_args)
-            self.conv2 = Conv2dBnAct(out_channels, out_channels,  **conv_args)
-        else:
-            self.conv1 = Conv2dBnAct(in_channels, out_channels, norm_layer=norm_layer, **conv_args)
-            self.conv2 = Conv2dBnAct(out_channels, out_channels, norm_layer=norm_layer, **conv_args)
+        self.upsample = nn.Upsample(scale_factor=scale_factor, mode='bilinear', align_corners=True)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.bn1 = norm_layer(out_channels) if norm_layer is not None else nn.Identity()
+        self.act = activation(inplace=True)
 
-    def forward(self, x, skip: Optional[torch.Tensor] = None):
-        if self.scale_factor != 1.0:
-            x = F.interpolate(x, scale_factor=self.scale_factor, mode='nearest')
+    def forward(self, x, skip):
+        x = self.upsample(x)
         if skip is not None:
+            # Ensure the spatial dimensions match before concatenating
+            if x.shape[2:] != skip.shape[2:]:
+                diffY = skip.size()[2] - x.size()[2]
+                diffX = skip.size()[3] - x.size()[3]
+                x = F.pad(x, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
             x = torch.cat([x, skip], dim=1)
         x = self.conv1(x)
-        x = self.conv2(x)
+        x = self.bn1(x)
+        x = self.act(x)
         return x
 
 
@@ -235,9 +234,13 @@ class UnetDecoder(nn.Module):
     def forward(self, x: List[torch.Tensor]):
         encoder_head = x[0]
         skips = x[1:]
+        print(f"Encoder head shape: {encoder_head.shape}")
         x = self.center(encoder_head)
         for i, b in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
+            if skip is not None:
+                print(f"Decoder block {i} shape before upsample: {x.shape}")
+                print(f"Skip connection {i} shape: {skip.shape}")
             x = b(x, skip)
         x = self.final_conv(x)
         return x
