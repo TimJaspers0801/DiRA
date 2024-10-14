@@ -370,7 +370,7 @@ class DiRA_UNetAdapted(nn.Module):
         self.fc = nn.Linear(latent, num_classes)
 
     def forward(self, x):
-        features = self.backbone.encoder.forward_features(x)
+        _, features = self.backbone.encoder.forward_features(x)
         decoder_output = self.backbone.decoder(*features)
         masks = self.backbone.segmentation_head(decoder_output)
 
