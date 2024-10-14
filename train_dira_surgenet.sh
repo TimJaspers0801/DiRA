@@ -3,7 +3,7 @@
 #SBATCH --nodes=1                               # Specify the amount of A100 Nodes with 4 A100 GPUs (single GPU 128 SBUs/hour, 512 SBUs/hour for an entire node)
 #SBATCH --ntasks=1                              # Specify the number of tasks
 #SBATCH --cpus-per-task=24                      # Specify the number of CPUs/task
-#SBATCH --gpus=titanrtx.24gb:2                 # Specify the number of GPUs to use
+#SBATCH --gpus=rtx2080ti.11gb:2                 # Specify the number of GPUs to use
 #SBATCH --time=120:00:00                        # Specify the maximum time the job can run
 
 export OUTPUT_FOLDER=DiRA_SurgeNet                                                    # Define name of output folder
@@ -27,7 +27,7 @@ srun apptainer exec --bind /elec003.mnt:/elec003.mnt --bind /vast.mnt:/vast.mnt 
     '/elec003.mnt/project/elec-vca-uppergi/Datasets/ssl-datasets/SurgeNetXL' \
     -a caformer_s18 \
     --lr=0.03 \
-    --batch-size=248 \
+    --batch-size=124 \
     --dist-url='env://' \
     --multiprocessing-distributed \
     --world-size=1 \
