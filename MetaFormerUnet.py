@@ -167,6 +167,9 @@ class UnetDecoder(nn.Module):
         in_channels.insert(0, encoder_channels[0])  # Add encoder head channels as the first input
         out_channels = decoder_channels
 
+        print("In channels: ", in_channels)
+        print("Out channels: ", out_channels)
+
         # Create decoder blocks
         self.blocks = nn.ModuleList()
         for in_ch, out_ch in zip(in_channels, out_channels):
