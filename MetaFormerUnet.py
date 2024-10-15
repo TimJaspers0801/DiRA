@@ -176,20 +176,17 @@ class UnetDecoder(nn.Module):
     def forward(self, features: List[torch.Tensor]):
         # Reverse order to process from deepest encoder layer to shallowest
         x = self.center(features[0])
-        skips = features[1:]
+        skips = features[0:]
 
         # Process through decoder blocks and concatenate skip connections
         for i, block in enumerate(self.blocks):
-            if i == 0:
-                x = block(x)
-            else:
-                skip = skips[i] if i < len(skips) else None
-                if skip is not None:
-                    # Concatenate the skip connection from the encoder
-                    x = torch.cat([x, skip], dim=1)
+            skip = skips[i] if i < len(skips) else None
+            if skip is not None:
+                # Concatenate the skip connection from the encoder
+                x = torch.cat([x, skip], dim=1)
 
-                # Pass through the decoder block
-                x = block(x)
+            # Pass through the decoder block
+            x = block(x)
 
         return x
 
