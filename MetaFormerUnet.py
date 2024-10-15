@@ -180,13 +180,16 @@ class UnetDecoder(nn.Module):
 
         # Process through decoder blocks and concatenate skip connections
         for i, block in enumerate(self.blocks):
-            skip = skips[i] if i < len(skips) else None
-            if skip is not None:
-                # Concatenate the skip connection from the encoder
-                x = torch.cat([x, skip], dim=1)
+            if i == 0:
+                x = block(x)
+            else:
+                skip = skips[i] if i < len(skips) else None
+                if skip is not None:
+                    # Concatenate the skip connection from the encoder
+                    x = torch.cat([x, skip], dim=1)
 
-            # Pass through the decoder block
-            x = block(x)
+                # Pass through the decoder block
+                x = block(x)
 
         return x
 
