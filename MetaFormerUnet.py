@@ -252,7 +252,10 @@ class CaFormerEncoder(nn.Module):
 
     def forward_features(self, x):
         # Forward pass through the caformer_s18 backbone
-        _, x = self.backbone.forward_features(x)
+        head, x = self.backbone.forward_features(x)
+
+        # concatenate the features
+        x = head + x
 
         # Return feature maps from different stages in a list (UNet expects multi-stage features)
         return x

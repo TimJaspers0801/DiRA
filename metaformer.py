@@ -20,7 +20,7 @@ from functools import partial
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from timm.layers.helpers import to_2tuple
+#from timm.layers.helpers import to_2tuple
 from timm.models.layers import trunc_normal_, DropPath
 from timm.models.registry import register_model
 import os
