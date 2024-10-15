@@ -183,6 +183,8 @@ class UnetDecoder(nn.Module):
             skip = skips[i] if i < len(skips) else None
             if skip is not None:
                 # Concatenate the skip connection from the encoder
+                print(f"Skip shape: {skip.shape}")
+                print(f"X shape: {x.shape}")
                 x = torch.cat([x, skip], dim=1)
 
             # Pass through the decoder block
