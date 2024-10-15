@@ -1,16 +1,9 @@
-import torch
-import torch.nn as nn
-from timm import create_model
-import torch.nn.functional as F
-from typing import Optional, List
-from timm.layers import ClassifierHead
-from metaformer import MetaFormer, caformer_s18
+from metaformer import caformer_s18
 import segmentation_models_pytorch as smp
 
 import torch
 import torch.nn as nn
-from typing import List
-from functools import partial
+
 
 # class SegmentationHead(nn.Module):
 #     """
@@ -256,6 +249,14 @@ class CaFormerEncoder(nn.Module):
 
         # Return feature maps from different stages in a list (UNet expects multi-stage features)
         return x
+
+    def forward_features(self, x):
+        # Forward pass through the caformer_s18 backbone
+        _, x = self.backbone.forward_features(x)
+
+        # Return feature maps from different stages in a list (UNet expects multi-stage features)
+        return x
+
 class UNetWithMetaFormer(nn.Module):
     def __init__(self, num_classes=1, pretrained='ImageNet', pretrained_weights=None, **kwargs):
         super().__init__()
@@ -280,3 +281,17 @@ class UNetWithMetaFormer(nn.Module):
     def forward(self, x):
         # Pass input through UNet (which uses the CaFormer encoder)
         return self.unet(x)
+
+if __name__== '__main__':
+    # Initialize the UNet with MetaFormer model
+    model = UNetWithMetaFormer(num_classes=3)
+
+    # Generate a random input tensor
+    x = torch.randn((1, 3, 256, 256))
+
+    # Perform a forward pass
+    with torch.no_grad():
+        out = model(x)
+
+    # Print the output shape
+    print(out.shape)
