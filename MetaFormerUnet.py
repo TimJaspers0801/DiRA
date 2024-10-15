@@ -164,7 +164,7 @@ class UnetDecoder(nn.Module):
 
         # Decoder blocks, reverse order of channels for upsampling
         in_channels = [enc_ch + dec_ch for enc_ch, dec_ch in zip(encoder_channels[1:], decoder_channels[:-1])]
-        in_channels.insert(0, encoder_channels[0])  # Add encoder head channels as the first input
+        in_channels.insert(0, encoder_channels[0]*2)  # Add encoder head channels as the first input
         out_channels = decoder_channels
 
         print("In channels: ", in_channels)
