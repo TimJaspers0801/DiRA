@@ -241,45 +241,42 @@ from functools import partial
 #         return x
 
 
-class UNetWithMetaFormer(nn.Module):
-    def __init__(self, num_classes=3, pretrained='ImageNet', pretrained_weights=None, **kwargs):
+class CaFormerEncoder(nn.Module):
+    def __init__(self, pretrained='ImageNet', pretrained_weights=None, **kwargs):
         super().__init__()
-
         # Initialize the caformer_s18 backbone
-        self.backbone = caformer_s18(num_classes=num_classes, pretrained=pretrained, pretrained_weights=pretrained_weights, **kwargs)
+        self.backbone = caformer_s18(pretrained=pretrained, pretrained_weights=pretrained_weights, **kwargs)
 
-        # The feature extractor should output feature maps from different stages of the backbone
-        self.encoder_stages = [3, 6, 9, 12]  # Depending on where you'd like to extract features
-        encoder_channels = [64, 128, 320, 512]  # Channels at each stage of the encoder
-
-        # UNet decoder (corresponding to feature maps from backbone stages)
-        self.decoder = smp.decoders.unet.decoder.UNetDecoder(
-            encoder_channels=encoder_channels,
-            decoder_channels=[256, 128, 64, 32],  # Can adjust based on your model's architecture
-            n_blocks=4,
-            use_batchnorm=True,
-            center=False,  # True if you want to add a bottleneck in the decoder
-            attention_type=None,  # Can add attention if needed
-        )
-
-        # Segmentation head to produce final output
-        self.segmentation_head = smp.base.SegmentationHead(
-            in_channels=32,  # Input from the final decoder layer
-            out_channels=num_classes,  # Number of output classes for segmentation
-            activation=None  # Add softmax or sigmoid activation as needed
-        )
+        # Manually specify encoder stages, and encoder output channels at each stage
+        self.encoder_channels = [64, 128, 320, 512]
 
     def forward(self, x):
-        # Forward pass through the backbone (caformer_s18)
-        _, features = self.backbone.forward_features(x)
+        # Forward pass through the caformer_s18 backbone
+        _, x = self.backbone.forward_features(x)
 
-        # Extract feature maps from different stages for UNet decoder
-        encoder_outputs = features
+        # Return feature maps from different stages in a list (UNet expects multi-stage features)
+        return x
+class UNetWithCaFormer(nn.Module):
+    def __init__(self, num_classes=1, pretrained='ImageNet', pretrained_weights=None, **kwargs):
+        super().__init__()
 
-        # Decode the features using the UNet decoder
-        decoder_output = self.decoder(*encoder_outputs)
+        # Initialize CaFormer Encoder (backbone)
+        self.encoder = CaFormerEncoder(pretrained=pretrained, pretrained_weights=pretrained_weights, **kwargs)
 
-        # Apply the segmentation head to the decoded features
-        output = self.segmentation_head(decoder_output)
+        # Initialize the UNet model from segmentation_models_pytorch with the custom encoder
+        self.unet = smp.Unet(
+            encoder_name=None,  # No predefined encoder
+            encoder_depth=4,  # Depth of encoder stages
+            encoder_weights=None,  # Custom encoder, so no weights here
+            decoder_channels=[256, 128, 64, 32],  # Decoder channel configuration
+            in_channels=3,  # Input image channels (e.g., RGB)
+            classes=num_classes,  # Number of output segmentation classes
+            activation=None  # Can be set to 'softmax' or 'sigmoid' based on task
+        )
 
-        return output
+        # Replace the Unet's default encoder with the custom CaFormer encoder
+        self.unet.encoder = self.encoder
+
+    def forward(self, x):
+        # Pass input through UNet (which uses the CaFormer encoder)
+        return self.unet(x)
