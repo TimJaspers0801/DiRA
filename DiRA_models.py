@@ -371,7 +371,7 @@ class DiRA_UNetAdapted(nn.Module):
         self.fc = nn.Linear(latent, num_classes)
 
     def forward(self, x):
-        features = self.backbone.encoder.unet.forward_features(x)
+        features = self.backbone.unet.encoder.forward_features(x)
         for i, f in enumerate(features):
             print(f"Feature {i} shape: {f.shape}")
         decoder_output = self.backbone.unet.decoder(features)
