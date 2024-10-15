@@ -4,7 +4,7 @@ from timm import create_model
 import torch.nn.functional as F
 from typing import Optional, List
 from timm.layers import ClassifierHead
-import metaformer
+from metaformer import MetaFormer, caformer_s18
 
 import torch
 import torch.nn as nn
@@ -52,11 +52,7 @@ class UNetWithMetaFormer(nn.Module):
         backbone_kwargs = backbone_kwargs or {}
 
         # Initialize MetaFormer backbone
-        self.encoder = MetaFormer(
-            in_chans=in_channels,
-            num_classes=num_classes,  # Ignored for segmentation, used for feature extraction
-            **backbone_kwargs
-        )
+        self.encoder = caformer_s18(num_classes=num_classes)
 
         # Extract encoder channels from MetaFormer output dims
         encoder_channels = [64, 128, 320, 512]  # These should match MetaFormer's output dims
