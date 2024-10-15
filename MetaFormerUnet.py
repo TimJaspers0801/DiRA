@@ -145,7 +145,7 @@ class UnetDecoder(nn.Module):
     def __init__(
             self,
             encoder_channels,
-            decoder_channels=(512, 320, 128, 64),
+            decoder_channels=(512, 320, 128, 64),  # Matching encoder channels for symmetry
             final_channels=1,
             norm_layer=nn.BatchNorm2d,
             center=True,
@@ -153,7 +153,7 @@ class UnetDecoder(nn.Module):
     ):
         super().__init__()
 
-        # Center block, typically a conv or identity
+        # Center block to process the deepest encoder feature map
         if center:
             channels = encoder_channels[0]
             self.center = DecoderBlock(
@@ -162,31 +162,34 @@ class UnetDecoder(nn.Module):
         else:
             self.center = nn.Identity()
 
-        # Decoder blocks
+        # Decoder blocks, reverse order of channels for upsampling
         in_channels = [enc_ch + dec_ch for enc_ch, dec_ch in zip(encoder_channels[1:], decoder_channels[:-1])]
-        in_channels.insert(0, encoder_channels[0])  # First block uses the encoder head
-
+        in_channels.insert(0, encoder_channels[0])  # Add encoder head channels as the first input
         out_channels = decoder_channels
 
-        # Define blocks
+        # Create decoder blocks
         self.blocks = nn.ModuleList()
         for in_ch, out_ch in zip(in_channels, out_channels):
             self.blocks.append(DecoderBlock(in_ch, out_ch, scale_factor=2.0, norm_layer=norm_layer))
 
-    def forward(self, features: List[torch.Tensor]):
-        x = self.center(features[0])
-        skips = features[0:]
 
-        # Pass through decoder blocks
+    def forward(self, features: List[torch.Tensor]):
+        # Reverse order to process from deepest encoder layer to shallowest
+        x = self.center(features[0])
+        skips = features[1:]
+
+        # Process through decoder blocks and concatenate skip connections
         for i, block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             if skip is not None:
-                # print shape of skip connection
-                print("Shapes in Decoder: ", x.shape, skip.shape)
-                x = torch.cat([x, skip], dim=1)  # Concatenate with skip connection
+                # Concatenate the skip connection from the encoder
+                x = torch.cat([x, skip], dim=1)
+
+            # Pass through the decoder block
             x = block(x)
 
         return x
+
 
 class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, scale_factor=2.0, norm_layer=nn.BatchNorm2d, activation=nn.ReLU):
@@ -195,7 +198,9 @@ class DecoderBlock(nn.Module):
         self.norm1 = norm_layer(out_channels) if norm_layer else nn.Identity()
         self.activation = activation()
 
-        self.upsample = nn.Upsample(scale_factor=scale_factor, mode='bilinear', align_corners=True)
+        # Transpose convolution (deconvolution) for upsampling
+        self.upsample = nn.ConvTranspose2d(out_channels, out_channels, kernel_size=2, stride=2)
+
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
         self.norm2 = norm_layer(out_channels) if norm_layer else nn.Identity()
 
@@ -203,7 +208,10 @@ class DecoderBlock(nn.Module):
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.activation(x)
+
+        # Upsample the feature map using ConvTranspose2d
         x = self.upsample(x)
+
         x = self.conv2(x)
         x = self.norm2(x)
         x = self.activation(x)
