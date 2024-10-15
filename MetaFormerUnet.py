@@ -61,14 +61,6 @@ class UNetWithMetaFormer(nn.Module):
         if encoder_freeze:
             self._freeze_encoder(non_trainable_layers)
 
-        # Preprocessing mean and std
-        if preprocessing:
-            self.mean = [0.485, 0.456, 0.406]
-            self.std = [0.229, 0.224, 0.225]
-        else:
-            self.mean = None
-            self.std = None
-
         # UNet-like decoder
         if not decoder_use_batchnorm:
             norm_layer = None
@@ -99,6 +91,10 @@ class UNetWithMetaFormer(nn.Module):
 
         # Extract features from MetaFormer (used for skip connections)
         _, features = self.encoder.forward_features(x)  # Get features from MetaFormer stages
+
+        # print shape of features
+        for feature in features:
+            print(feature.shape)
 
         # Reverse the feature maps for the decoder (as in U-Net)
         features = list(reversed(features))
@@ -185,6 +181,8 @@ class UnetDecoder(nn.Module):
         for i, block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             if skip is not None:
+                # print shape of skip connection
+                print("Shapes in Decoder: ", x.shape, skip.shape)
                 x = torch.cat([x, skip], dim=1)  # Concatenate with skip connection
             x = block(x)
 
