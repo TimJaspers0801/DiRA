@@ -271,15 +271,10 @@ class UNetWithMetaFormer(nn.Module):
 
     def forward(self, x):
         # Forward pass through the backbone (caformer_s18)
-        features = self.backbone(x)
+        features = self.backbone.forward_features(x)
 
         # Extract feature maps from different stages for UNet decoder
-        encoder_outputs = [
-            features['stage1'],  # Corresponding to stage 1 of caformer
-            features['stage2'],  # Corresponding to stage 2 of caformer
-            features['stage3'],  # Corresponding to stage 3 of caformer
-            features['stage4'],  # Corresponding to stage 4 of caformer
-        ]
+        encoder_outputs = features
 
         # Decode the features using the UNet decoder
         decoder_output = self.decoder(*encoder_outputs)
