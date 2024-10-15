@@ -371,11 +371,11 @@ class DiRA_UNetAdapted(nn.Module):
         self.fc = nn.Linear(latent, num_classes)
 
     def forward(self, x):
-        features = self.backbone.encoder.forward_features(x)
+        features = self.backbone.encoder.unet.forward_features(x)
         for i, f in enumerate(features):
             print(f"Feature {i} shape: {f.shape}")
-        decoder_output = self.backbone.decoder(features)
-        masks = self.backbone.segmentation_head(decoder_output)
+        decoder_output = self.backbone.unet.decoder(features)
+        masks = self.backbone.unet.segmentation_head(decoder_output)
 
         f = self.avgpool(features[-1])
         f = torch.flatten(f,1)
