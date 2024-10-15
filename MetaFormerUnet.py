@@ -256,7 +256,7 @@ class CaFormerEncoder(nn.Module):
 
         # Return feature maps from different stages in a list (UNet expects multi-stage features)
         return x
-class UNetWithCaFormer(nn.Module):
+class UNetWithMetaFormer(nn.Module):
     def __init__(self, num_classes=1, pretrained='ImageNet', pretrained_weights=None, **kwargs):
         super().__init__()
 
