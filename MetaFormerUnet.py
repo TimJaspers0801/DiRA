@@ -175,7 +175,7 @@ class UnetDecoder(nn.Module):
 
     def forward(self, features: List[torch.Tensor]):
         x = self.center(features[0])
-        skips = features[1:]
+        skips = features[0:]
 
         # Pass through decoder blocks
         for i, block in enumerate(self.blocks):
