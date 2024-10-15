@@ -190,7 +190,6 @@ class UnetDecoder(nn.Module):
 
         return x
 
-
 class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, scale_factor=2.0, norm_layer=nn.BatchNorm2d, activation=nn.ReLU):
         super().__init__()
@@ -230,94 +229,3 @@ class Conv2dBnAct(nn.Module):
         return x
 
 
-class DecoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, scale_factor=None, norm_layer=nn.BatchNorm2d, activation=nn.ReLU):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
-        self.norm = norm_layer(out_channels)
-        self.activation = activation(inplace=True)
-
-        # Handle both upsampling and downsampling scenarios
-        if scale_factor is None:
-            self.upsample = nn.Identity()  # No change in spatial dimensions
-        else:
-            self.upsample = nn.Upsample(scale_factor=scale_factor, mode='bilinear', align_corners=True)
-
-    def forward(self, x, skip=None):
-        x = self.upsample(x)  # Upsample or downsample feature map
-        if skip is not None:
-            x = torch.cat([x, skip], dim=1)  # Concatenate with the skip connection
-        x = self.conv1(x)
-        x = self.norm(x)
-        x = self.activation(x)
-        x = self.conv2(x)
-        return x
-
-class UnetDecoder(nn.Module):
-    def __init__(
-            self,
-            encoder_channels,
-            decoder_channels=(256, 128, 64, 32, 16),
-            final_channels=1,
-            norm_layer=nn.BatchNorm2d,
-            center=True,
-            activation=nn.ReLU
-    ):
-        super().__init__()
-
-        if center:
-            channels = encoder_channels[0]
-            self.center = DecoderBlock(
-                channels, channels, scale_factor=1.0,
-                activation=activation, norm_layer=norm_layer
-            )
-        else:
-            self.center = nn.Identity()
-
-        # list(decoder_channels[:-1][:len(encoder_channels)])
-        in_channels = [in_chs + skip_chs for in_chs, skip_chs in zip(
-            [encoder_channels[0]] + list(decoder_channels[:-1]),
-            list(encoder_channels[1:]) + [0])]
-
-        out_channels = decoder_channels
-
-        if len(in_channels) != len(out_channels):
-            in_channels.append(in_channels[-1]//2)
-
-        # self.blocks = nn.ModuleList()
-        # for in_chs, out_chs in zip(in_channels, out_channels):
-        #     self.blocks.append(DecoderBlock(in_chs, out_chs, norm_layer=norm_layer))
-
-        self.blocks = nn.ModuleList([
-            DecoderBlock(in_channels[0], out_channels[0], scale_factor=0.5),  # Downsample
-            DecoderBlock(in_channels[1], out_channels[1], scale_factor=2.0),  # Upsample
-            DecoderBlock(in_channels[2], out_channels[2], scale_factor=2.0),  # Upsample
-            DecoderBlock(in_channels[3], out_channels[3], scale_factor=2.0),  # Upsample
-        ])
-
-        self.final_conv = nn.Conv2d(out_channels[-1], final_channels, kernel_size=(1, 1))
-
-        self._init_weight()
-
-    def _init_weight(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                torch.nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-
-    def forward(self, x: List[torch.Tensor]):
-        encoder_head = x[0]
-        skips = x[1:]
-        print(f"Encoder head shape: {encoder_head.shape}")
-        x = self.center(encoder_head)
-        for i, b in enumerate(self.blocks):
-            skip = skips[i] if i < len(skips) else None
-            if skip is not None:
-                print(f"Decoder block {i} shape before upsample: {x.shape}")
-                print(f"Skip connection {i} shape: {skip.shape}")
-            x = b(x, skip)
-        x = self.final_conv(x)
-        return x
