@@ -265,7 +265,7 @@ class UNetWithMetaFormer(nn.Module):
 
         # Initialize the UNet model from segmentation_models_pytorch with the custom encoder
         self.unet = smp.Unet(
-            encoder_name=None,  # No predefined encoder
+            encoder_name='resnet50',  # No predefined encoder
             encoder_depth=4,  # Depth of encoder stages
             encoder_weights=None,  # Custom encoder, so no weights here
             decoder_channels=[256, 128, 64, 32],  # Decoder channel configuration
